@@ -10,3 +10,7 @@ numpy
 pandas
 psycopg2-binary
 python-multipart
+greenlet
+websockets
+biopython
+torch

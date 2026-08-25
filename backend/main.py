@@ -1,8 +1,9 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from websocket_manager import manager
 from mqtt_client import start_mqtt_client, stop_mqtt_client
 import uvicorn
+from bio_analyzer import extract_features
 
 app = FastAPI(title="BioStream AI API", version="1.0.0")
 
@@ -17,6 +18,13 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    print("Initializing Database...")
+    from database import engine, Base
+    import models  # Important: import models so Base.metadata registers the tables
+    async with engine.begin() as conn:
+        # Note: In production use Alembic for migrations
+        await conn.run_sync(Base.metadata.create_all)
+        
     print("Starting MQTT Client...")
     start_mqtt_client()
 
@@ -28,6 +36,19 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     return {"message": "Welcome to BioStream AI API"}
+
+@app.post("/api/analyze-fasta")
+async def analyze_fasta(file: UploadFile = File(...)):
+    if not file.filename.endswith(('.fasta', '.fa', '.txt')):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a FASTA file.")
+    
+    try:
+        content = await file.read()
+        text_content = content.decode("utf-8")
+        results = extract_features(text_content)
+        return {"status": "success", "data": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws/sensors")
 async def websocket_endpoint(websocket: WebSocket):

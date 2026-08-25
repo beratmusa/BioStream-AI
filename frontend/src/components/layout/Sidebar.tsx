@@ -12,7 +12,7 @@ export function Sidebar() {
 
   return (
     <>
-      <div className="flex md:h-screen w-full md:w-64 flex-col border-b md:border-b-0 md:border-r bg-muted/20 relative z-10">
+      <div className="flex md:h-screen md:sticky md:top-0 w-full md:w-64 flex-col border-b md:border-b-0 md:border-r bg-muted/20 relative z-10">
         {/* Header (Top on Mobile, Top of Sidebar on Desktop) */}
         <div className="flex h-16 items-center justify-between md:justify-start border-b px-4 md:px-6 bg-background md:bg-transparent">
           <div className="flex items-center">
